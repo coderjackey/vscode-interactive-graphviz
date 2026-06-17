@@ -196,13 +196,22 @@
       var that = this
       var options = this.options
   
-      // save the colors of the paths, ellipses and polygons
-      $el.find('polygon, ellipse, path').each(function () {
+      // save the colors of the shapes and labels
+      $el.find('polygon, ellipse, path, text').each(function () {
         var $this = $(this)
+        var fill = $this.attr('fill')
+        var stroke = $this.attr('stroke')
+        var tagName = $this.prop('tagName')
+        if (tagName && tagName.toLowerCase() == 'text') {
+          fill = fill || $this.css('fill')
+          stroke = stroke || $this.css('stroke')
+        }
         // save original colors
         $this.data('graphviz.svg.color', {
-          fill: $this.attr('fill'),
-          stroke: $this.attr('stroke')
+          fill: fill,
+          stroke: stroke,
+          originalFill: $this.attr('fill'),
+          originalStroke: $this.attr('stroke')
   
         })
   
@@ -383,9 +392,12 @@
   
     GraphvizSvg.prototype.colorElement = function ($el, getColor) {
       var bg = this.$element.css('background')
-      $el.find('polygon, ellipse, path').each(function() {
+      $el.find('polygon, ellipse, path, text').each(function() {
         var $this = $(this)
         var color = $this.data('graphviz.svg.color')
+        if (!color) {
+          return
+        }
         if (color.fill && color.fill != "none") {
           $this.attr('fill', getColor(color.fill, bg)) // don't set  fill if it's a path
         }
@@ -396,14 +408,21 @@
     }
   
     GraphvizSvg.prototype.restoreElement = function ($el) {
-      $el.find('polygon, ellipse, path').each(function() {
+      $el.find('polygon, ellipse, path, text').each(function() {
         var $this = $(this)
         var color = $this.data('graphviz.svg.color')
-        if (color.fill && color.fill != "none") {
-          $this.attr('fill', color.fill) // don't set  fill if it's a path
+        if (!color) {
+          return
         }
-        if (color.stroke && color.stroke != "none") {
-          $this.attr('stroke', color.stroke)
+        if (color.originalFill === undefined) {
+          $this.removeAttr('fill')
+        } else {
+          $this.attr('fill', color.originalFill)
+        }
+        if (color.originalStroke === undefined) {
+          $this.removeAttr('stroke')
+        } else {
+          $this.attr('stroke', color.originalStroke)
         }
       })
     }
