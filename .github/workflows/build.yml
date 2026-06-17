@@ -25,3 +25,8 @@ jobs:
         run: vsce package
       - name: lint
         run: npm run lint
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: graphviz-interactive-preview-vsix
+          path: "*.vsix"
